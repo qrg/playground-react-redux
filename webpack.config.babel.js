@@ -1,17 +1,19 @@
-import {resolve} from 'path';
+const {resolve} = require('path');
 
-import ExtractTextPlugin from 'extract-text-webpack-plugin';
-import CleanPlugin from 'clean-webpack-plugin';
-import HtmlPlugin from 'html-webpack-plugin';
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const SRC = resolve(__dirname, 'src');
 const DIST = resolve(__dirname, 'public');
 const DEV_SERVER_PORT = 9000;
 
-export default {
+module.exports = {
   mode: 'development',
 
-  entry: [resolve(SRC, 'index.js'), resolve(SRC, 'styles', 'index.sass')],
+  entry: {
+    main: resolve(SRC, 'index.js')
+  },
 
   output: {
     sourcePrefix: '  ',
@@ -29,35 +31,16 @@ export default {
       },
       {
         test: /\.css$/,
-        use: ['css-hot-loader'].concat(
-          ExtractTextPlugin.extract({
-            fallback: 'style-loader',
-            use: 'css-loader'
-          })
-        )
+        use: ['css-hot-loader', MiniCssExtractPlugin.loader, 'css-loader']
       },
       {
         test: /\.(sass|scss)$/,
-        use: ['css-hot-loader'].concat(
-          ExtractTextPlugin.extract({
-            fallback: 'style-loader',
-            use: [
-              {
-                loader: 'css-loader',
-                options: {
-                  sourceMap: true,
-                  importLoaders: 1
-                }
-              },
-              {
-                loader: 'sass-loader',
-                options: {
-                  sourceMap: true
-                }
-              }
-            ]
-          })
-        )
+        use: [
+          'css-hot-loader',
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+          'sass-loader'
+        ]
       },
       {
         test: /\.(woff|woff2|eot|ttf|otf)$/,
@@ -96,14 +79,16 @@ export default {
   },
 
   plugins: [
-    new CleanPlugin([DIST], {
-      watch: true
-    }),
-    new HtmlPlugin({
-      title: `Try Redux`,
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      title: 'Try Redux',
       template: `${SRC}/index.html`
     }),
-    new ExtractTextPlugin('styles/main.css', {allChunks: true})
+    new MiniCssExtractPlugin({
+      // Options similar to the same options in webpackOptions.output
+      // both options are optional
+      filename: 'styles/main.css'
+    })
   ],
 
   devServer: {
